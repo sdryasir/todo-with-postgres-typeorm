@@ -5,6 +5,13 @@ import { TodoDto } from 'src/models/todo/todo.dto';
 import { TodoEntity } from 'src/models/todo/todo.entity';
 import { DeleteResult, Repository, UpdateResult } from 'typeorm';
 
+export interface ITodosResponse{
+    data:TodoDto[];
+    page:number;
+    total:number;
+    last_page:number;
+}   
+
 @Injectable()
 export class TodoService {
 
@@ -14,7 +21,7 @@ export class TodoService {
         return await this.todoRepository.save(body);
     }
 
-    async getTodos(searchText:QueryParamsDto):Promise<TodoDto[]>{
+    async getTodos(searchText:QueryParamsDto):Promise<ITodosResponse>{
         const {search, sort, page} = searchText;
         const builder = this.todoRepository.createQueryBuilder('todo_entity')
         if(search){
@@ -23,10 +30,22 @@ export class TodoService {
         if(sort){
             builder.orderBy('todo_entity.title', sort.toUpperCase())
         }
+
+        const perPage = 4;
         const pageNum:number = page||1
-        const perPage = 9;
+        const total = await builder.getCount();
+        const last_page = Math.ceil(total/perPage);
+
         builder.offset((pageNum - 1) * perPage).limit(perPage)
-        return builder.getMany();
+
+        const resData = {
+            data: await builder.getMany(),
+            page:pageNum,
+            total,
+            last_page
+        }
+
+        return resData;
     }
 
     async getTodo(id:number):Promise<TodoDto>{

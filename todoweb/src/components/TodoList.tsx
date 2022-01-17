@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react'
 import ListItem from './ListItem'
 import { useDispatch, useSelector } from 'react-redux';
-import { getTodos } from '../redux/actions/todoActions'
+// import { getTodos } from '../redux/actions/todoActions'
 import { RootState } from '../redux/store';
 import { UserState } from '../redux/reducers/userReducer'
 import { Link } from 'react-router-dom'
-
+import axios from 'axios';
+import ReactPaginate from 'react-paginate';
 
 export interface ITodo {
     id: number;
@@ -17,30 +18,54 @@ export interface ITodo {
 const TodoList: React.FC = () => {
 
     const dispatch = useDispatch();
-    const { todos } = useSelector<RootState, any>(state => state.todos);
+    // const { todos } = useSelector<RootState, any>(state => state.todos);
+
+
+    const [todos, setTodos] = useState<ITodo[]>([]);
+    const [total, setTotal] = useState<number>(0)
+    const [currentPage, setCurrentPage] = useState<number>(0)
+    const [lastPage, setLastPage] = useState<number>(0)
+
     const [search, seetSearch] = useState('');
 
-    const [selectedTodos, setSelectedTodos] = useState([]);
+    // const [selectedTodos, setSelectedTodos] = useState<number[]>([]);
+    // const [status, setStatus] = useState<boolean>(false)
 
     const { userInfo } = useSelector<RootState, UserState>(state => state.user);
     const isAuthenticated = userInfo?.isAuthenticated
 
-    const handleChange = (id: number) => {
-        console.log(id)
-    }
 
+    const getTodos = async () => {
+        try {
+            await axios.get('http://localhost:3001/todos')
+                .then(response => {
+                    const data = response.data.data
+                    setTotal(response.data.total)
+                    setCurrentPage(response.data.page)
+                    setLastPage(response.data.last_page)
+                    setTodos(data)
+                });
+        } catch (error) {
+            console.log(error)
+        }
+    }
     useEffect(() => {
-        dispatch(getTodos())
+        //dispatch(getTodos())
+        getTodos();
     }, [])
 
     const handleChkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, checked } = e.target;
-        // if (e.target.checked) {
-        //     setSelectedTodos([...selectedTodos, name])
-        // } else {
-        //     setSelectedTodos.filter((t) => t.name !== name),
-        // }
-        //setSelectedTodos[name] = checked
+        let tempTodo = todos.map((todo) => {
+            return todo.title === name ? { ...todo, status: checked } : todo;
+        })
+        setTodos(tempTodo)
+    }
+
+    const handlePageClick = async (data:any)=>{
+        let currentPage = data.selected + 1;
+        await axios.get(`http://localhost:3001/todos?page=${currentPage}`)
+        .then(response=>setTodos(response.data.data))
     }
 
     return (
@@ -48,26 +73,20 @@ const TodoList: React.FC = () => {
             <div className="mb-3">
                 <input type="text" onChange={(e) => seetSearch(e.target.value)} className="form-control" placeholder="Search" />
             </div>
-            <ul className="list-group">
+            <ul className="list-group mb-3">
                 <li className="list-group-item active d-flex justify-content-between">
-                    <p className='m-0'>All Todos - ({todos ? todos.length : ''}) - Selected {selectedTodos} </p>
+                    <p className='m-0'>All Todos - ({total}) : Selected ({todos.filter((i) => i.status).length}) </p>
                     <div className="sort-btn">
                         {/* <i className="bi bi-sort-alpha-down me-3"></i>
                         <i className="bi bi-sort-alpha-up"></i> */}
                     </div>
                 </li>
                 {
-                    todos?.filter((todo: ITodo) => {
-                        if (todo.title === '') {
-                            return todo;
-                        } else if (todo.title.toString().toLocaleLowerCase().includes(search.toString().toLocaleLowerCase())) {
-                            return todo;
-                        }
-                    }).map((todo: ITodo, idx: number) => (
+                    todos?.map((todo: ITodo, idx: number) => (
                         // <ListItem key={idx} todoItem={todo} />
-                        <li className="list-group-item d-flex justify-content-between">
+                        <li key={idx} className="list-group-item d-flex justify-content-between">
                             <div className="todo">
-                                <input type="checkbox" name={todo.title} onChange={(e) => handleChkChange(e)} />
+                                <input type="checkbox" name={todo.title} checked={todo.status || false} onChange={(e) => handleChkChange(e)} />
                                 <span style={{ fontWeight: 'bold', marginLeft: 12 }}>{todo.title}</span>
                             </div>
                             {
@@ -83,7 +102,26 @@ const TodoList: React.FC = () => {
                     )
                     )
                 }
+                
             </ul>
+            <ReactPaginate
+                    breakLabel="..."
+                    nextLabel="next >"
+                    onPageChange={handlePageClick}
+                    containerClassName='pagination'
+                    pageClassName='page-item'
+                    pageLinkClassName='page-link'
+                    pageRangeDisplayed={2}
+                    pageCount={lastPage}
+                    previousLabel="< previous"
+                    previousClassName='page-item'
+                    nextClassName='page-item'
+                    previousLinkClassName='page-link'
+                    nextLinkClassName='page-link'
+                    breakClassName='page-item'
+                    breakLinkClassName='page-link'
+                    activeClassName='active'
+                />
         </div>
     )
 }

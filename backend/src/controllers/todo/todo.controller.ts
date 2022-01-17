@@ -2,7 +2,7 @@ import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } fro
 import { ApiBearerAuth, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { JwtGuard } from 'src/guards/jwt.guard';
 import { TodoDto } from 'src/models/todo/todo.dto';
-import { TodoService } from 'src/services/todo/todo.service';
+import { ITodosResponse, TodoService } from 'src/services/todo/todo.service';
 import { DeleteResult, UpdateResult } from 'typeorm';
 
 export interface QueryParamsDto{
@@ -27,7 +27,7 @@ export class TodoController {
 
     @Get()
     @ApiOkResponse({status:200, description:'Array of all todos'})
-    getTodos(@Query() search:QueryParamsDto):Promise<TodoDto[]>{
+    getTodos(@Query() search:QueryParamsDto):Promise<ITodosResponse>{
         return this.todoService.getTodos(search);
     }
 
