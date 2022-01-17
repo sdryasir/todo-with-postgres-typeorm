@@ -26,6 +26,8 @@ const TodoList: React.FC = () => {
     const [currentPage, setCurrentPage] = useState<number>(0)
     const [lastPage, setLastPage] = useState<number>(0)
 
+    const [isChecked, setIsChecked] = useState(false)
+
     const [search, seetSearch] = useState('');
 
     // const [selectedTodos, setSelectedTodos] = useState<number[]>([]);
@@ -54,31 +56,88 @@ const TodoList: React.FC = () => {
         getTodos();
     }, [])
 
-    const handleChkChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const { name, checked } = e.target;
-        let tempTodo = todos.map((todo) => {
-            return todo.title === name ? { ...todo, status: checked } : todo;
-        })
-        setTodos(tempTodo)
+    const handleChkChange = async (e:React.ChangeEvent<HTMLInputElement>) => {
+        const { id, checked } = e.target;
+        // const { name, checked } = e.target;
+
+        // e.target.checked = checked
+        // console.log(e.target.checked = checked)
+        setIsChecked(!isChecked)
+        
+        
+
+
+        // console.log(todo.id)
+        // await axios.put(`http://localhost:3001/todos/${todo.id}`, {...todo, status:todo.status?false:true})
+        // .then(response=>{
+        //     console.log(response)
+        // })
+
+
+        // let tempTodo = todos.map((todo) => {
+        //     return todo.title === name ? { ...todo, status: checked } : todo;
+        // })
+        // console.log(tempTodo)
+        //setTodos(tempTodo)
     }
 
     const handlePageClick = async (data:any)=>{
         let currentPage = data.selected + 1;
         await axios.get(`http://localhost:3001/todos?page=${currentPage}`)
-        .then(response=>setTodos(response.data.data))
+        .then(response=>{
+            setTodos(response.data.data)
+        })
     }
+
+    const handleSearch = async ()=>{
+        await axios.get(`http://localhost:3001/todos?search=${search}`)
+        .then(response=>{
+            const data = response.data.data
+            setTotal(response.data.total)
+            setCurrentPage(response.data.page)
+            setLastPage(response.data.last_page)
+            setTodos(data)
+        })
+    }
+
+    const handleDesc = async ()=>{
+        await axios.get(`http://localhost:3001/todos?sort=asc`)
+        .then(response=>{
+            const data = response.data.data
+            setTotal(response.data.total)
+            setCurrentPage(response.data.page)
+            setLastPage(response.data.last_page)
+            setTodos(data)
+        })
+    }
+
+    const handleAsc = async ()=>{
+        await axios.get(`http://localhost:3001/todos?sort=desc`)
+        .then(response=>{
+            const data = response.data.data
+            setTotal(response.data.total)
+            setCurrentPage(response.data.page)
+            setLastPage(response.data.last_page)
+            setTodos(data)
+        })
+        
+    }
+
+ 
 
     return (
         <div className='list-wrapper mt-3'>
-            <div className="mb-3">
-                <input type="text" onChange={(e) => seetSearch(e.target.value)} className="form-control" placeholder="Search" />
+            <div className="input-group mb-3">
+                <input type="text" className="form-control" onChange={(e) => seetSearch(e.target.value)} placeholder="Search Here"/>
+                <button className="btn btn-outline-secondary" type="button" onClick={handleSearch}>Search</button>
             </div>
             <ul className="list-group mb-3">
                 <li className="list-group-item active d-flex justify-content-between">
                     <p className='m-0'>All Todos - ({total}) : Selected ({todos.filter((i) => i.status).length}) </p>
-                    <div className="sort-btn">
-                        {/* <i className="bi bi-sort-alpha-down me-3"></i>
-                        <i className="bi bi-sort-alpha-up"></i> */}
+                    <div className="sort-btn d-flex align-item-center">
+                        
+                        <i className="bi bi-sort-alpha-down ms-3 me-3" onClick={handleDesc}></i>
+                        <i className="bi bi-sort-alpha-up" onClick={handleAsc}></i>
                     </div>
                 </li>
                 {
@@ -86,7 +145,8 @@ const TodoList: React.FC = () => {
                         // <ListItem key={idx} todoItem={todo} />
                         <li key={idx} className="list-group-item d-flex justify-content-between">
                             <div className="todo">
-                                <input type="checkbox" name={todo.title} checked={todo.status || false} onChange={(e) => handleChkChange(e)} />
+                                <input type="checkbox" id={todo.id.toString()} checked={isChecked} onChange={(e) => handleChkChange(e)} />
+                                {/* <input type="checkbox" name={todo.title} checked={todo.status || false} onChange={(e) => handleChkChange(e)} /> */}
                                 <span style={{ fontWeight: 'bold', marginLeft: 12 }}>{todo.title}</span>
                             </div>
                             {

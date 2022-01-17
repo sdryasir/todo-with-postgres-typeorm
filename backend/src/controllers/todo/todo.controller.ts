@@ -8,7 +8,8 @@ import { DeleteResult, UpdateResult } from 'typeorm';
 export interface QueryParamsDto{
     search?:string;
     sort?:any;
-    page?:number
+    page?:number;
+    limit?:number
 }
 
 

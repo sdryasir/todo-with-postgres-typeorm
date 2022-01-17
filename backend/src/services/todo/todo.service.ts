@@ -22,10 +22,11 @@ export class TodoService {
     }
 
     async getTodos(searchText:QueryParamsDto):Promise<ITodosResponse>{
-        const {search, sort, page} = searchText;
+        const {search, sort, page, limit} = searchText;
         const builder = this.todoRepository.createQueryBuilder('todo_entity')
         if(search){
-            builder.where('LOWER(todo_entity.title) LIKE :search OR LOWER(todo_entity.description) LIKE :search',{search:`%${search.toLowerCase()}%`});
+            builder.where('LOWER(todo_entity.title) LIKE :search',{search:`%${search.toLowerCase()}%`});
+            // builder.where('LOWER(todo_entity.title) LIKE :search OR LOWER(todo_entity.description) LIKE :search',{search:`%${search.toLowerCase()}%`});
         }
         if(sort){
             builder.orderBy('todo_entity.title', sort.toUpperCase())
