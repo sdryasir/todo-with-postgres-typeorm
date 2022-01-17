@@ -1,9 +1,15 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiResponse } from '@nestjs/swagger';
 import { JwtGuard } from 'src/guards/jwt.guard';
 import { TodoDto } from 'src/models/todo/todo.dto';
 import { TodoService } from 'src/services/todo/todo.service';
 import { DeleteResult, UpdateResult } from 'typeorm';
+
+export interface QueryParamsDto{
+    search?:string;
+    sort?:any;
+    page?:number
+}
 
 
 @Controller('todos')
@@ -21,8 +27,8 @@ export class TodoController {
 
     @Get()
     @ApiOkResponse({status:200, description:'Array of all todos'})
-    getTodos():Promise<TodoDto[]>{
-        return this.todoService.getTodos();
+    getTodos(@Query() search:QueryParamsDto):Promise<TodoDto[]>{
+        return this.todoService.getTodos(search);
     }
 
     @Get(':id')
@@ -40,4 +46,5 @@ export class TodoController {
     deleteTodo(@Param() id:number):Promise<DeleteResult>{
         return this.todoService.deleteTodo(id);
     }
+
 }
